@@ -85,7 +85,6 @@ public class AuthenController {
                     objCustomer.getPhone());
             if(objEL != null){
                 objEL.setStatus("00");
-                objEL.setTrans_id(objTrans1.getTrans_id());
                 objEL.setLinked_date(date);
                 ewalletLinkedService.update(objEL);
 

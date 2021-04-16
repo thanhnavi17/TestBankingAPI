@@ -119,14 +119,38 @@ public class EwalletController {
         Transaction objTrans = new Transaction();
         objTrans.setTrans_date(date);
         objTrans.setTrans_type("Nạp tiền");
+        if(objEL.getStatus().equals("00")){
+            if(objAcc.getBalance() > amount){
+                objAcc.setBalance(objAcc.getBalance() - amount);
+                accountService.update(objAcc);
 
-        if(objAcc.getBalance() > amount){
-            objAcc.setBalance(objAcc.getBalance() - amount);
-            accountService.update(objAcc);
+                objTrans.setStatus("00");
+                objTrans.setAmount(amount);
+                objTrans.setDescription("Nạp tiền vào Momo từ " + objAcc.getAccount_number());
+                transactionService.create(objTrans);
 
-            objTrans.setStatus("00");
+                //Lưu transaction ewallet
+                TransactionEwallet objTE = new TransactionEwallet();
+                objTE.setTrans_id(objTrans.getTrans_id());
+                objTE.setAccount_number(account_number);
+                objTE.setEwallet_id(ewallet_id);
+                objTE.setFull_name(objCustomer.getFull_name());
+                objTE.setId_card(objCustomer.getId_card());
+                transactionEwalletService.create(objTE);
+
+                response.put("status","00");
+            }else{
+                objTrans.setStatus("09");
+                objTrans.setAmount(amount);
+                objTrans.setDescription("Số tiền trong tài khoản không đủ");
+                transactionService.create(objTrans);
+
+                response.put("status", "09");
+            }
+        }else{
+            objTrans.setStatus("11");
             objTrans.setAmount(amount);
-            objTrans.setDescription("Nạp tiền vào Momo từ " + objAcc.getAccount_number());
+            objTrans.setDescription("Ví chưa được liên kết");
             transactionService.create(objTrans);
 
             //Lưu transaction ewallet
@@ -137,16 +161,9 @@ public class EwalletController {
             objTE.setFull_name(objCustomer.getFull_name());
             objTE.setId_card(objCustomer.getId_card());
             transactionEwalletService.create(objTE);
-
-            response.put("status","00");
-        }else{
-            objTrans.setStatus("09");
-            objTrans.setAmount(amount);
-            objTrans.setDescription("Số tiền trong tài khoản không đủ");
-            transactionService.create(objTrans);
-
-            response.put("status", "09");
+            response.put("status","11");
         }
+
         return new ResponseEntity(response, HttpStatus.OK);
     }
 
@@ -168,25 +185,42 @@ public class EwalletController {
         Transaction objTrans = new Transaction();
         objTrans.setTrans_date(date);
         objTrans.setTrans_type("Rút tiền");
+        if(objEL != null && objEL.getStatus().equals("00")){
+            objAcc.setBalance(objAcc.getBalance()+ amount);
+            accountService.update(objAcc);
 
-        objAcc.setBalance(objAcc.getBalance()+ amount);
-        accountService.update(objAcc);
+            objTrans.setStatus("00");
+            objTrans.setAmount(amount);
+            objTrans.setDescription("Rút tiền từ Momo về " + objAcc.getAccount_number());
+            transactionService.create(objTrans);
 
-        objTrans.setStatus("00");
-        objTrans.setAmount(amount);
-        objTrans.setDescription("Rút tiền từ Momo về " + objAcc.getAccount_number());
-        transactionService.create(objTrans);
+            //Lưu transaction ewallet
+            TransactionEwallet objTE = new TransactionEwallet();
+            objTE.setTrans_id(objTrans.getTrans_id());
+            objTE.setAccount_number(account_number);
+            objTE.setEwallet_id(ewallet_id);
+            objTE.setFull_name(objCustomer.getFull_name());
+            objTE.setId_card(objCustomer.getId_card());
+            transactionEwalletService.create(objTE);
 
-        //Lưu transaction ewallet
-        TransactionEwallet objTE = new TransactionEwallet();
-        objTE.setTrans_id(objTrans.getTrans_id());
-        objTE.setAccount_number(account_number);
-        objTE.setEwallet_id(ewallet_id);
-        objTE.setFull_name(objCustomer.getFull_name());
-        objTE.setId_card(objCustomer.getId_card());
-        transactionEwalletService.create(objTE);
+            response.put("status","00");
+        }else{
+            objTrans.setStatus("11");
+            objTrans.setAmount(amount);
+            objTrans.setDescription("Ví chưa được liên kết");
+            transactionService.create(objTrans);
 
-        response.put("status","00");
+            //Lưu transaction ewallet
+            TransactionEwallet objTE = new TransactionEwallet();
+            objTE.setTrans_id(objTrans.getTrans_id());
+            objTE.setAccount_number(account_number);
+            objTE.setEwallet_id(ewallet_id);
+            objTE.setFull_name(objCustomer.getFull_name());
+            objTE.setId_card(objCustomer.getId_card());
+            transactionEwalletService.create(objTE);
+            response.put("status","11");
+        }
+
         return new ResponseEntity(response, HttpStatus.OK);
     }
 
@@ -227,7 +261,7 @@ public class EwalletController {
 
         //Hủy liên kết
         objEL.setStatus("10");
-        
+
         ewalletLinkedService.update(objEL);
 
         //Lưu transaction ewallet
