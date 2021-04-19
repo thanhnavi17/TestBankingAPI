@@ -3,11 +3,13 @@ package banking.api.controller;
 import banking.api.model.*;
 import banking.api.repository.EwalletLinkedRepository;
 import banking.api.service.CallAPI;
+import banking.api.service.CoreBankService;
 import banking.api.service.account.AccountService;
 import banking.api.service.customer.CustomerService;
 import banking.api.service.ewalletlinked.EwalletLinkedService;
 import banking.api.service.otp.OTPService;
 import banking.api.service.transaction.TransactionService;
+import banking.api.service.transactionecom.TransactionEcomService;
 import banking.api.service.transactionewallet.TransactionEwalletService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +51,12 @@ public class AuthenController {
     @Autowired
     TransactionEwalletService transactionEwalletService;
 
+    @Autowired
+    CoreBankService coreBankService;
+
+    @Autowired
+    TransactionEcomService transactionEcomService;
+
     @PostMapping("verifyOTP")
     public ResponseEntity<?> verifyOTP(@RequestBody String requestBody){
         JSONObject jsonObject = new JSONObject(requestBody);
@@ -67,7 +75,7 @@ public class AuthenController {
             objTrans.setDescription("Xác thực OTP thành công");
             transactionService.create(objTrans);
 
-            response.put("status","00");
+            response.put("errCode","00");
             Customer objCustomer = customerService.findByCif(cif);
             Account objAcc = accountService.findAccountByNumber(account_number);
 
@@ -112,9 +120,53 @@ public class AuthenController {
             objTrans.setDescription("Mã OTP không chính xác");
             transactionService.create(objTrans);
 
-            response.put("status","05");
+            response.put("errCode","05");
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-    
+
+    @PostMapping("ecommerce/verifyOTP")
+    public ResponseEntity<?> ecommerceOTP(@RequestBody String requestBody){
+        JSONObject jsonObject = new JSONObject(requestBody);
+
+        String cif = jsonObject.getString("cif");
+        String otp = jsonObject.getString("otp");
+        String account_number = jsonObject.getString("account_number");
+        float amount = jsonObject.getFloat("amount");
+        String description = jsonObject.getString("description");
+        String receive_account = jsonObject.getString("receive_account");
+
+        //Lấy thông tin khách hàng để lưu transactionEcom
+        Customer objCustomer = customerService.findByCif(cif);
+
+        //Kiểm tra OTP
+        Transaction objTrans1 = new Transaction();
+        objTrans1.setTrans_date(date);
+        objTrans1.setTrans_type("Kiểm tra OTP");
+
+        Map<String, String> response;
+
+        if(otpService.otpCheck(cif,otp)){
+            objTrans1.setStatus("00");
+            objTrans1.setDescription("Xác thực OTP thành công");
+            transactionService.create(objTrans1);
+
+            response = coreBankService.transferMoney(account_number,receive_account,amount,description);
+
+            //Lưu vào TransactionEcommerce
+            TransactionEcom objTransEcom = new TransactionEcom();
+            objTransEcom.setTrans_id(Integer.parseInt(response.get("trans_id")));
+            objTransEcom.setAccount_number(account_number);
+            objTransEcom.setFull_name(objCustomer.getFull_name());
+            objTransEcom.setId_card(objCustomer.getId_card());
+
+            transactionEcomService.create(objTransEcom);
+        }else{
+            response = new HashMap<>();
+            response.put("errCode", "08");
+            response.put("errDesc", "Mã OTP không chính xác");
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

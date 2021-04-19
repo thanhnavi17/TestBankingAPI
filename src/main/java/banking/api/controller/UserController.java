@@ -53,7 +53,7 @@ public class UserController {
             objTrans.setDescription("Đăng nhập thành công");
             transactionService.create(objTrans);
 
-            response.put("status","00");
+            response.put("errCode","00");
             User user = userRepository.findByUsername(username);
             response.put("cif", user.getCif());
             response.put("account_number", jsonObject.getString("account_number"));
@@ -63,7 +63,45 @@ public class UserController {
             objTrans.setDescription("Thông tin đăng nhập không đúng");
             transactionService.create(objTrans);
 
-            response.put("status","04");
+            response.put("errCode","04");
+        }
+
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("ecommerce/login")
+    public ResponseEntity<?> ecommerceLogin(@RequestBody String requestBody){
+        JSONObject jsonObject = new JSONObject(requestBody);
+
+        String username = jsonObject.getString("username");
+        String password = jsonObject.getString("password");
+        String description = jsonObject.getString("description");
+        float amount = jsonObject.getFloat("amount");
+
+        Transaction objTrans = new Transaction();
+        objTrans.setTrans_date(date);
+        objTrans.setTrans_type("Kiểm tra đăng nhập");
+
+        Map<String, String> response = new HashMap<>();
+
+        if(userService.loginCheck(username, password)){
+            objTrans.setStatus("00");
+            objTrans.setDescription("Đăng nhập thành công");
+            transactionService.create(objTrans);
+
+            response.put("errCode","00");
+            User user = userRepository.findByUsername(username);
+            response.put("cif", user.getCif());
+            response.put("account_number", jsonObject.getString("account_number"));
+            response.put("description", description);
+            response.put("amount", amount+"");
+        }else{
+            objTrans.setStatus("04");
+            objTrans.setDescription("Thông tin đăng nhập không đúng");
+            transactionService.create(objTrans);
+
+            response.put("errCode","04");
         }
 
 

@@ -72,7 +72,7 @@ public class EwalletController {
                     transactionService.create(objTrans);
 
 
-                    response.put("status","00");
+                    response.put("errCode","00");
                     response.put("url","testBankingAPI/login");
                     response.put("account_number", objAcc.getAccount_number());
 
@@ -81,21 +81,21 @@ public class EwalletController {
                     objTrans.setDescription("Sai thông tin người dùng");
                     transactionService.create(objTrans);
 
-                    response.put("status","01");
+                    response.put("errCode","01");
                 }
             }else{
                 objTrans.setStatus("02");
                 objTrans.setDescription("Tài khoản không tồn tại");
                 transactionService.create(objTrans);
 
-                response.put("status","02");
+                response.put("errCode","02");
             }
         }else{
             objTrans.setStatus("03");
             objTrans.setDescription("Số chứng minh thư không tồn tại");
             transactionService.create(objTrans);
 
-            response.put("status","03");
+            response.put("errCode","03");
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -138,14 +138,14 @@ public class EwalletController {
                 objTE.setId_card(objCustomer.getId_card());
                 transactionEwalletService.create(objTE);
 
-                response.put("status","00");
+                response.put("errCode","00");
             }else{
                 objTrans.setStatus("09");
                 objTrans.setAmount(amount);
                 objTrans.setDescription("Số tiền trong tài khoản không đủ");
                 transactionService.create(objTrans);
 
-                response.put("status", "09");
+                response.put("errCode", "09");
             }
         }else{
             objTrans.setStatus("11");
@@ -161,7 +161,7 @@ public class EwalletController {
             objTE.setFull_name(objCustomer.getFull_name());
             objTE.setId_card(objCustomer.getId_card());
             transactionEwalletService.create(objTE);
-            response.put("status","11");
+            response.put("errCode","11");
         }
 
         return new ResponseEntity(response, HttpStatus.OK);
@@ -203,7 +203,7 @@ public class EwalletController {
             objTE.setId_card(objCustomer.getId_card());
             transactionEwalletService.create(objTE);
 
-            response.put("status","00");
+            response.put("errCode","00");
         }else{
             objTrans.setStatus("11");
             objTrans.setAmount(amount);
@@ -218,7 +218,7 @@ public class EwalletController {
             objTE.setFull_name(objCustomer.getFull_name());
             objTE.setId_card(objCustomer.getId_card());
             transactionEwalletService.create(objTE);
-            response.put("status","11");
+            response.put("errCode","11");
         }
 
         return new ResponseEntity(response, HttpStatus.OK);
@@ -274,7 +274,7 @@ public class EwalletController {
         transactionEwalletService.create(objTE);
 
         Map<String, String> response = new HashMap<>();
-        response.put("status","00");
+        response.put("errCode","00");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
